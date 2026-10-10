@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFlow — Projects</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header id="site-header"></header>
+
+  <main class="container">
+    <div class="page-head">
+      <div>
+        <h1>Your projects</h1>
+        <p class="muted" id="summary"></p>
+      </div>
+      <button class="btn" id="new-project-btn">+ New project</button>
+    </div>
+    <div id="projects" class="project-grid"><p class="muted">Loading...</p></div>
+  </main>
+
+  <div class="modal-backdrop" id="new-project-modal" hidden>
+    <form class="modal" id="new-project-form">
+      <button type="button" class="modal-close" data-close>&times;</button>
+      <h2>Create a project</h2>
+      <label for="project-name">Project name</label>
+      <input id="project-name" maxlength="60" required placeholder="e.g. Mobile App Launch">
+      <label for="project-desc">Description <span class="muted">(optional)</span></label>
+      <textarea id="project-desc" rows="3" maxlength="300" placeholder="What is this project about?"></textarea>
+      <div class="form-error" id="project-error"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" data-close>Cancel</button>
+        <button class="btn" type="submit">Create project</button>
+      </div>
+    </form>
+  </div>
+
+  <footer>TaskFlow · CodeAlpha Full Stack Internship — Task 3</footer>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/common.js"></script>
+  <script>
+    if (requireUser()) {
+      const grid = document.getElementById('projects');
+      const modal = document.getElementById('new-project-modal');
+
+      async function load() {
+        const projects = await api('/projects');
+        const open = projects.reduce((n, p) => n + p.my_open_count, 0);
+        document.getElementById('summary').textContent =
+          `${projects.length} project${projects.length === 1 ? '' : 's'} · ${open} open task${open === 1 ? '' : 's'} assigned to you`;
+        grid.innerHTML = projects.length
+          ? projects.map((p) => {
+              const pct = p.task_count ? Math.round((p.done_count / p.task_count) * 100) : 0;
+              return `
+                <a class="project-card" href="/project.html?id=${p.id}">
+                  <span class="role-tag">${p.role === 'owner' ? 'Owner' : 'Member'}</span>
+                  <h3>${escapeHtml(p.name)}</h3>
+                  <div class="desc">${escapeHtml(p.description) || '<span class="muted">No description</span>'}</div>
+                  <div class="progress"><div style="width:${pct}%"></div></div>
+                  <div class="card-meta">
+                    <span>✅ ${p.done_count}/${p.task_count} done (${pct}%)</span>
+                    <span>👥 ${p.member_count}</span>
+                  </div>
+                  ${p.my_open_count ? `<div class="small" style="color:var(--primary)">${p.my_open_count} task${p.my_open_count === 1 ? '' : 's'} assigned to you</div>` : ''}
+                </a>`;
+            }).join('')
+          : `<div class="panel empty" style="grid-column:1/-1">
+               <div class="big">📋</div>
+               <p>No projects yet. Create your first project and invite your team!</p>
+             </div>`;
+      }
+
+      const openModal = () => {
+        modal.hidden = false;
+        document.getElementById('project-name').focus();
+      };
+      const closeModal = () => {
+        modal.hidden = true;
+        document.getElementById('new-project-form').reset();
+        document.getElementById('project-error').textContent = '';
+      };
+      document.getElementById('new-project-btn').addEventListener('click', openModal);
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal || e.target.closest('[data-close]')) closeModal();
+      });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
+
+      document.getElementById('new-project-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+          const project = await api('/projects', {
+            method: 'POST',
+            body: { name: document.getElementById('project-name').value, description: document.getElementById('project-desc').value },
+          });
+          location.href = `/project.html?id=${project.id}`;
+        } catch (err) {
+          document.getElementById('project-error').textContent = err.message;
+        }
+      });
+
+      // Being added to / removed from a project updates the list live
+      const s = connectSocket();
+      s?.on('notification', load);
+      s?.on('project:removed', load);
+
+      load().catch((err) => (grid.innerHTML = `<p class="form-error">${escapeHtml(err.message)}</p>`));
+    }
+  </script>
+</body>
+</html>

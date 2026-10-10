@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFlow — Board</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="board-page">
+  <header id="site-header"></header>
+
+  <main>
+    <div class="board-head" id="board-head" hidden>
+      <div>
+        <a href="/" class="small">← All projects</a>
+        <h1 id="project-name"></h1>
+        <div class="desc" id="project-desc"></div>
+      </div>
+      <div class="head-right">
+        <span class="live" id="live"><span class="live-dot"></span><span id="live-text">Connecting...</span></span>
+        <div class="members" id="member-avatars"></div>
+        <button class="btn btn-outline btn-sm" id="members-btn">👥 Members</button>
+        <button class="btn btn-outline btn-sm" id="settings-btn" hidden>⚙ Settings</button>
+      </div>
+    </div>
+
+    <div class="toolbar" id="toolbar" hidden>
+      <input type="search" id="filter-text" placeholder="Search tasks...">
+      <select id="filter-assignee" aria-label="Filter by assignee"></select>
+      <select id="filter-priority" aria-label="Filter by priority">
+        <option value="">All priorities</option>
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      </select>
+    </div>
+
+    <div class="board" id="board"><p class="muted" style="padding:20px">Loading...</p></div>
+  </main>
+
+  <div class="modal-backdrop" id="modal" hidden></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/common.js"></script>
+  <script src="/js/board.js"></script>
+</body>
+</html>

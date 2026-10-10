@@ -1,0 +1,5 @@
+node_modules/
+taskflow.db
+taskflow.db-*
+.env
+.DS_Store

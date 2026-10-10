@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFlow — Login</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header id="site-header"></header>
+
+  <main class="container">
+    <form class="panel auth-card" id="form">
+      <h1>Welcome back</h1>
+      <p class="demo-note">Demo accounts: <strong>anil@demo.com</strong>, <strong>meera@demo.com</strong>, <strong>kiran@demo.com</strong> (password <strong>password123</strong>)</p>
+      <label for="email">Email</label>
+      <input id="email" type="email" required autocomplete="email">
+      <label for="password">Password</label>
+      <input id="password" type="password" required autocomplete="current-password">
+      <div class="form-error" id="error"></div>
+      <button class="btn btn-block" type="submit">Login</button>
+      <p>New here? <a id="register-link" href="/register.html">Create an account</a></p>
+    </form>
+  </main>
+
+  <footer>TaskFlow · CodeAlpha Full Stack Internship — Task 3</footer>
+
+  <script src="/js/common.js"></script>
+  <script>
+    const next = new URLSearchParams(location.search).get('next');
+    const safeNext = next && next.startsWith('/') && !next.startsWith('//') ? next : '/';
+    if (next) document.getElementById('register-link').href = `/register.html?next=${encodeURIComponent(safeNext)}`;
+
+    document.getElementById('form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const error = document.getElementById('error');
+      error.textContent = '';
+      try {
+        Auth.save(await api('/auth/login', {
+          method: 'POST',
+          body: { email: document.getElementById('email').value, password: document.getElementById('password').value },
+        }));
+        location.href = safeNext;
+      } catch (err) {
+        error.textContent = err.message;
+      }
+    });
+  </script>
+</body>
+</html>
